@@ -1,0 +1,10 @@
+langchain-openai
+python-dotenv
+beautifulsoup4
+faiss-cpu
+unstructured
+lxml
+tiktoken
+docker
+psycopg2-binary
+pgvector
