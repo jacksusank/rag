@@ -48,13 +48,13 @@ class CustomXMLLoader(BaseLoader):
             docs.append(doc)
         return docs
     
-xml_file_path = "GrantsDBExtract20240310v2.xml"
-# xml_file_path = "test.xml"
+# xml_file_path = "GrantsDBExtract20240310v2.xml"
+xml_file_path = "test.xml"
 
 loader = CustomXMLLoader()
 documents = loader.myload(xml_file_path)
 
-embeddings = OpenAIEmbeddings()
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
 
 from langchain.vectorstores.pgvector import PGVector
@@ -67,7 +67,7 @@ db = PGVector.from_documents(embedding=embeddings, documents=documents, collecti
 
 def getSimilar(query):
     similar = ["Query: " + query]
-    similar.append(db.similarity_search_with_score(query, k=2))
+    similar.append(db.similarity_search_with_score(query, k=1))
 
     return similar
 
@@ -87,7 +87,8 @@ prompt = ChatPromptTemplate.from_messages([
 chain = getSimilar | prompt | llm
 
 while (input != quit):
-    input = input("Enter a query: ")
+    my_input = str(input("Enter a query: "))
+    print(type(my_input))
     print("\n\nResults: ")
-    chain.invoke(input)
+    print(chain.invoke(my_input))
     print("\n\n")

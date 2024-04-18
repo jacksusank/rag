@@ -306,4 +306,30 @@
         <GrantorContactEmailDescription>e-Mail: Program Mailbox</GrantorContactEmailDescription>
         <GrantorContactText>Julius Cotton &amp;lt;br/&amp;gt;ED Grants.gov FIND Systems Admin. &amp;lt;br/&amp;gt;Phone 202-245-6288 &amp;lt;br/&amp;gt;EducationGrantInquiries@ed.gov &amp;lt;br/&amp;gt;Program Manager: &amp;lt;br/&amp;gt;Rebecca Marek &amp;lt;br/&amp;gt;U.S. Department of Education &amp;lt;br/&amp;gt;400 Maryland Ave. SW., Room 3E344 &amp;lt;br/&amp;gt;Washington, DC 20202-6200. &amp;lt;br/&amp;gt;Telephone: 202-260-0968 or by email:  &amp;lt;br/&amp;gt;PreschoolDevelopmentGrants.Competition@ed.gov.</GrantorContactText>
     </OpportunitySynopsisDetail_1_0>
+    <OpportunitySynopsisDetail_1_0>
+        <OpportunityID>131313</OpportunityID>
+        <OpportunityTitle>Metal Direct Digital Manufacturing for Industrial Base Innovation Fund (IBIF) Program</OpportunityTitle>
+        <OpportunityNumber>W15QKN-12-R-D008</OpportunityNumber>
+        <OpportunityCategory>D</OpportunityCategory>
+        <FundingInstrumentType>CA</FundingInstrumentType>
+        <FundingInstrumentType>G</FundingInstrumentType>
+        <FundingInstrumentType>O</FundingInstrumentType>
+        <FundingInstrumentType>PC</FundingInstrumentType>
+        <CategoryOfFundingActivity>ST</CategoryOfFundingActivity>
+        <CFDANumbers>12.431</CFDANumbers>
+        <EligibleApplicants>99</EligibleApplicants>
+        <AgencyCode>DOD-AMC</AgencyCode>
+        <AgencyName>Dept of the Army -- Materiel Command</AgencyName>
+        <PostDate>11172011</PostDate>
+        <CloseDate>12192011</CloseDate>
+        <LastUpdatedDate>11172011</LastUpdatedDate>
+        <Description>II. AWARD INFORMATION Awards made under this BAA may be in the form of contracts, grants, cooperative agreements, and Other Transactions and are subject to the availability of appropriations. Proposals should be written to include a base period of one year plus two one-year option periods. Projects must have clear goals for each year. Funding of the option years will be contingent upon satisfactory performance of the base period and the availability of funds. Most proposals will request funding in the range of $200,000.00 to $1,000,000.00 per year. Multiple awards under the BAA are anticipated. </Description>
+        <Version>Synopsis 1</Version>
+        <CostSharingOrMatchingRequirement>Yes</CostSharingOrMatchingRequirement>
+        <AdditionalInformationURL>http://procnet.pica.army.mil/FBO/RFP/W15QKN-12-R-D008/W15QKN-12-R-D008.htm</AdditionalInformationURL>
+        <AdditionalInformationText>W15QKN-12-R-D008</AdditionalInformationText>
+        <GrantorContactEmail>lauren.a.mcdermott@us.army.mil</GrantorContactEmail>
+        <GrantorContactEmailDescription>Contract Specialist</GrantorContactEmailDescription>
+        <GrantorContactText>Lauren McDermott &amp;lt;br/&amp;gt;Contract Specialist &amp;lt;br/&amp;gt;Phone 5182665089</GrantorContactText>
+    </OpportunitySynopsisDetail_1_0>
 </Grants>
