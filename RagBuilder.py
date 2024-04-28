@@ -2,16 +2,26 @@ from langchain_openai import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
 from dotenv import load_dotenv
 
-load_dotenv
+
+load_dotenv()
 
 import xml.etree.ElementTree as ET
 from langchain.document_loaders.base import BaseLoader
 from langchain.docstore.document import Document
 from typing import List
+import json
+
+# Load the JSON data
+def load_json():
+    with open('MyDictionaries.json') as json_file:
+        data = json.load(json_file)
+    return data
+
+my_dictionaries = load_json()
 
 docs = []
 
-class CustomXMLLoader(BaseLoader):
+class CustomXMLLoader():
     # def __init__(self, file_path: str):
     #     self.loader = BaseLoader(file_path)
 
@@ -19,7 +29,7 @@ class CustomXMLLoader(BaseLoader):
         # super().__init__(file_path)  # Pass only the file_path argument to the base class's __init__ method
         # self.encoding = encoding  # Assign the encoding argument to an instance variable if needed
 
-    def myload(self, file_path: str) -> List[Document]:
+    def load(self, file_path: str) -> List[Document]:
         badSet = {"Version", "GrantorContactEmailDescription"}
         tree = ET.parse(file_path)
         root = tree.getroot()
@@ -36,12 +46,23 @@ class CustomXMLLoader(BaseLoader):
                 if thisTag in badSet:
                     print("BadSet caught")
                     continue
-                if thisTag == "EligibleApplicants":
-                    if subchild.text == "12":
-                        myString+= "The " + thisTag + " are Nonprofits having a 501 (c) (3) status with the IRS, other than institutions of higher education"
-
-                myString+=("The " + thisTag + " is " + subchild.text + ". ")
-                print(subchild.tag)
+                # if thisTag == "EligibleApplicants":
+                #     if subchild.text == "12":
+                #         myString+= "The " + thisTag + " are Nonprofits having a 501 (c) (3) status with the IRS, other than institutions of higher education"
+                
+                # Replaces the text with the value in the dictionary if the tag is in the dictionary
+                if thisTag in my_dictionaries: 
+                    if subchild.text in my_dictionaries[thisTag]:
+                        subchild.text = my_dictionaries[thisTag][subchild.text]
+                        myString+=("The " + thisTag + " is " + subchild.text + ". ")
+                        print(subchild.tag)
+                    else:
+                        print("Something went wrong")
+                        print(subchild.text)
+                        print(thisTag)
+                else:
+                    myString+=("The " + thisTag + " is " + subchild.text + ". ")
+                    print(subchild.tag)
                     
             metadata = {"ID": opportunityID}
             doc = Document(page_content=myString, metadata=metadata)
@@ -52,7 +73,7 @@ class CustomXMLLoader(BaseLoader):
 xml_file_path = "test.xml"
 
 loader = CustomXMLLoader()
-documents = loader.myload(xml_file_path)
+documents = loader.load(xml_file_path)
 
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
