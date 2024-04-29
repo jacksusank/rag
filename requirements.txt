@@ -4,5 +4,6 @@ langchain==0.1.12
 pinecone-client==2.2.1
 tiktoken
 psycopg2-binary pgvector
+openai
 
 # Also beautifulsoup4 and fais--cpu
