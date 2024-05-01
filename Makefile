@@ -7,6 +7,7 @@ xml_to_db:
 create_embeddings:
 	python create_embeddings.py
 
+# Run like: QUERY="query" make search
 search:
 	python search.py "${QUERY}"
 
