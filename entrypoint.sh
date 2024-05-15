@@ -12,6 +12,7 @@ done
 
 # Set up the database
 psql -U postgres -c "CREATE DATABASE totem;"
+psql -U postgres -d totem -c "CREATE EXTENSION vector;"
 psql -U postgres -d totem -f /app/sql/schema.sql
 
 # Run the Python script

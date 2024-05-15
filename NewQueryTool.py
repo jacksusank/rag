@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 import openai
-from openai import OpenAI
 import psycopg2
 from sentence_transformers import SentenceTransformer
 

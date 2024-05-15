@@ -2,6 +2,4 @@ psycopg2-binary
 openai
 pgvector
 sentence-transformers
-
-
-# Also beautifulsoup4 and fais--cpu
+python-dotenv

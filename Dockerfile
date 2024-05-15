@@ -19,6 +19,12 @@ RUN apt-get update && apt-get install -y python3 python3-pip
 RUN python3 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 
+# Copy the requirements file into the Docker image
+COPY requirements.txt .
+
+# Install the dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
 # Copy the entrypoint script
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

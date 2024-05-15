@@ -1,8 +1,7 @@
 import xml.etree.ElementTree as ET
 import json
 from dotenv import load_dotenv
-from openai import OpenAI
-import psycopg2
+
 
 load_dotenv()
 
@@ -44,14 +43,14 @@ class CustomXMLLoader():
                     if subchild.text in my_dictionaries[thisTag]:
                         subchild.text = my_dictionaries[thisTag][subchild.text]
                         myString+=("The " + thisTag + " is " + subchild.text + ". ")
-                        print(subchild.tag)
+                        # print(subchild.tag)
                     else:
                         print("Something went wrong")
                         print(subchild.text)
                         print(thisTag)
                 else:
                     myString+=("The " + thisTag + " is " + subchild.text + ". ")
-                    print(subchild.tag)
+                    # print(subchild.tag)
                     
             metadata = {"ID": opportunityID}
             doc = {"page_content": myString, "metadata": metadata}

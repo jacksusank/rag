@@ -4,7 +4,7 @@ import json
 
 
 from XMLScanner import documents
-documents = documents[:10]
+# documents = documents[:10]
 page_contents_list = [doc['page_content'] for doc in documents]
 metadata = [doc['metadata'] for doc in documents]
 
