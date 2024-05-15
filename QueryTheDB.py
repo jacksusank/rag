@@ -106,22 +106,25 @@ while (my_input != "quit"):
     print(llmResponse)
     print("\n\n")
 
-    old_question = my_input
-    my_input = str(input("Do you have any follow up questions? If so, ask them here: "))
 
-    directions = "You are a world class advisor to nonprofits owners who are seeking to find the most appropriate RFPs \
-        (request for proposals) for their organization to apply for. You just gave an owner some advice, and now they are asking \
-            followup questions. Please answer them to the best of your ability. Here is a log of the conversation that you are in \
-                followed by some context and the owner's new question:\n"
-    conversation_log = "The owner's old question: " + old_question + "\nYour response to it: " + llmResponse
-    context = "Here is some relevent info for you to use as context: " + similarOpportunities[0] + similarOpportunities[1] + similarOpportunities[2] + similarOpportunities[3]
-    new_question = "\nThe owner's new question that you are to answer now: " + my_input
-    follow_up_prompt = directions + conversation_log + context + new_question
+    # This is working code for the follow up questions
 
-    print(follow_up_prompt)
-    print(followUpQuestions(follow_up_prompt))
+    # old_question = my_input
+    # my_input = str(input("Do you have any follow up questions? If so, ask them here: "))
 
-    # We don't deal with cancer, so that would not be a good fit for us. Do you have any opportunities that are more in line with our mission of offering an alternative to traditional therapy for people with mental health issues?"
-    #That's good, but is there an opportunity that is specifically looking to support organizations that support mothers, gay people, or independent artists like mine?
+    # directions = "You are a world class advisor to nonprofits owners who are seeking to find the most appropriate RFPs \
+    #     (request for proposals) for their organization to apply for. You just gave an owner some advice, and now they are asking \
+    #         followup questions. Please answer them to the best of your ability. Here is a log of the conversation that you are in \
+    #             followed by some context and the owner's new question:\n"
+    # conversation_log = "The owner's old question: " + old_question + "\nYour response to it: " + llmResponse
+    # context = "Here is some relevent info for you to use as context: " + similarOpportunities[0] + similarOpportunities[1] + similarOpportunities[2] + similarOpportunities[3]
+    # new_question = "\nThe owner's new question that you are to answer now: " + my_input
+    # follow_up_prompt = directions + conversation_log + context + new_question
+
+    # print(follow_up_prompt)
+    # print(followUpQuestions(follow_up_prompt))
+
+    # # We don't deal with cancer, so that would not be a good fit for us. Do you have any opportunities that are more in line with our mission of offering an alternative to traditional therapy for people with mental health issues?"
+    # #That's good, but is there an opportunity that is specifically looking to support organizations that support mothers, gay people, or independent artists like mine?
 
     my_input = "quit"
