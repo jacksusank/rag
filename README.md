@@ -2,9 +2,15 @@
 
 Repo for all work relating to my Totem Rag RFP project.
 
+Initial setup:
+`make install`
+`make run_db`
+`make create_tables`
 
+Create embeddings:
+`make embeddings`
 
-docker build -t totem_image .
-docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=test totem_image
+Query database:
+`QUERY="query" make search`
 
 docker logs <container_id>

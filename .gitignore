@@ -1,3 +1,5 @@
 .env
-GrantsDBExtract20240310v2.xml
+GrantsDBExtract*.xml
 .venv
+.DS_Store
+__pycache__

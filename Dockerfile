@@ -1,29 +1,22 @@
 FROM pgvector/pgvector:pg16
 
-# Install python3-venv package
-RUN apt-get update \
-    && apt-get install -y python3-venv
-
-# Path: Dockerfile
-COPY . /app
-WORKDIR /app
-
 # Install required system packages
 RUN apt-get update \
-    && apt-get install -y python3 python3-pip libpq-dev git
+    && apt-get install -y python3 python3-pip python3-venv libpq-dev git
 
-# Install any dependencies required for your Python scripts
-RUN apt-get update && apt-get install -y python3 python3-pip
+# Copy the requirements file into the Docker image
+COPY requirements.txt .
 
 # Create a virtual environment
 RUN python3 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 
-# Copy the requirements file into the Docker image
-COPY requirements.txt .
-
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Path: Dockerfile
+COPY . /app
+WORKDIR /app
 
 # Copy the entrypoint script
 COPY ./entrypoint.sh /entrypoint.sh
