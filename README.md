@@ -5,7 +5,8 @@ Repo for all work relating to my Totem Rag RFP project.
 Initial setup:
 `make install`
 `make run_db`
-`make create_tables`
+In another terminal:
+`make create_table`
 
 Create embeddings:
 `make embeddings`
@@ -13,8 +14,8 @@ Create embeddings:
 Query database:
 `QUERY="query" make search`
 
-docker build -t totem_image .
-docker run -it -p 5432:5432 -e POSTGRES_PASSWORD=test totem_image
-
-
-docker logs <container_id>
+cd /tmp
+git clone --branch v0.7.0 https://github.com/pgvector/pgvector.git
+cd pgvector
+make
+make install # may need sudo

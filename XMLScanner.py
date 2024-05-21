@@ -62,7 +62,8 @@ xml_file_path = "GrantsDBExtract20240310v2.xml"
 loader = CustomXMLLoader()
 documents = loader.load(xml_file_path)
 
-documents = documents[:1000]
+# documents = documents[:1000]
+print(len(documents))
 page_contents_list = [doc['page_content'] for doc in documents]
 metadata = [doc['metadata'] for doc in documents]
 
