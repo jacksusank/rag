@@ -80,7 +80,7 @@ def promptMaker(input):
     output = f"You are a world class advisor to nonprofits who are seeking to find the most appropriate RFPs \
         (request for proposals) for their organization to apply for. You will be given the user's query followed \
             by some relevant context. You should use the context to answer the user's query. You should always \
-                include the relevant opportunity ID in your response. You should list at least one opportunity that \
+                include the relevant opportunity ID and opportunity number in your response. You should list at least one opportunity that \
                     would be good for the user to apply for, but list more if the opportunities are worth looking into.\
                         Here is the query and context: {input}"
 
