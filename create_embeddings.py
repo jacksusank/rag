@@ -1,14 +1,16 @@
 # This script adds the embeddings to the totemembeddings table in the totem database.
-from sentence_transformers import SentenceTransformer
-import psycopg2
 import json
 
-from XMLScanner import documents
-documents_length = documents.__len__()
-page_contents_list = [doc['page_content'] for doc in documents]
-metadata = [doc['metadata'] for doc in documents]
+import psycopg2
+from sentence_transformers import SentenceTransformer
 
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+from XMLScanner import documents
+
+documents_length = documents.__len__()
+page_contents_list = [doc["page_content"] for doc in documents]
+metadata = [doc["metadata"] for doc in documents]
+
+model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
 embeddings = model.encode(page_contents_list, show_progress_bar=True)
 
 # Print embeddings individually
@@ -18,11 +20,7 @@ for i, embedding in enumerate(embeddings):
 
 # Generic version
 connection = psycopg2.connect(
-    host="localhost",
-    port="5432",
-    database="totem",
-    user="postgres",
-    password="test"
+    host="localhost", port="5432", database="totem", user="postgres", password="test"
 )
 
 # Create a cursor
@@ -34,7 +32,9 @@ formatted_embeddings = [embedding.tolist() for embedding in embeddings]
 # print(formatted_embeddings[1])
 i = 0
 # Iterate over formatted embeddings, page_content, and metadata and insert them into the database
-for embedding, page_contents, meta in zip(formatted_embeddings, page_contents_list, metadata):
+for embedding, page_contents, meta in zip(
+    formatted_embeddings, page_contents_list, metadata
+):
     if i % 50 == 0:
         percent = i / documents_length * 100
         print(percent, " percent done!")
@@ -49,7 +49,19 @@ for embedding, page_contents, meta in zip(formatted_embeddings, page_contents_li
     # Commit the transaction
     # connection.commit()
 print("100 percent done!")
+# from psycopg2.extras import execute_values
 
+# insert_sql = "INSERT INTO table (id, name, created) VALUES %s"
+# # this is optional
+# value_template="(%s, %s, to_timestamp(%s))"
+
+# cur = conn.cursor()
+
+# items = []
+# items.append((1, "name", 123123))
+# # append more...
+
+# execute_values(cur, insert_sql, items, value_template)
 # Commit the transaction
 connection.commit()
 
