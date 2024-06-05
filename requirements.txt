@@ -3,3 +3,4 @@ openai
 pgvector
 sentence-transformers
 python-dotenv
+lxml

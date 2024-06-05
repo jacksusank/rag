@@ -39,7 +39,7 @@ try:
     # Create a cursor
     cursor = connection.cursor()
 
-    add_extension_query = "CREATE EXTENSION IF NOT EXISTS vector;"
+    add_extension_query = "CREATE EXTENSION IF NOT EXISTS vector;"  
     cursor.execute(add_extension_query)
 
     # Create the table if it doesn't exist
