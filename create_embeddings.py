@@ -28,16 +28,10 @@ cursor = connection.cursor()
 
 formatted_embeddings = [embedding.tolist() for embedding in embeddings]
 
-
-# print(formatted_embeddings[1])
-i = 0
 # Iterate over formatted embeddings, page_content, and metadata and insert them into the database
 for embedding, page_contents, meta in zip(
     formatted_embeddings, page_contents_list, metadata
 ):
-    if i % 50 == 0:
-        percent = i / documents_length * 100
-        print(percent, " percent done!")
     # Construct the INSERT query
     insert_query = """
     INSERT INTO totemembeddings (embeddings, page_contents, metadata)
@@ -48,7 +42,6 @@ for embedding, page_contents, meta in zip(
     cursor.execute(insert_query, (embedding, page_contents, json.dumps(meta)))
     # Commit the transaction
     # connection.commit()
-print("100 percent done!")
 # from psycopg2.extras import execute_values
 
 # insert_sql = "INSERT INTO table (id, name, created) VALUES %s"

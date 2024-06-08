@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result Page</title>
+</head>
+<body>
+    <body style="background-color:rgb(133, 202, 211);">
+    <h1>Query Response</h1>
+    <p><strong>Query:</strong> {{ query }}</p>
+    <div>
+        <h2>LLM Response:</h2>
+        <pre>{{ response }}</pre>
+    </div>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Web App</title>
+    <style>
+        body {
+            background-color: rgb(133, 202, 211);
+            font-family: Arial, sans-serif;
+        }
+        .query-input {
+            width: 80%; /* Adjust the width as needed */
+            height: 40px; /* Adjust the height as needed */
+            font-size: 16px; /* Adjust the font size as needed */
+            padding: 8px; /* Add padding inside the input field */
+            border: 1px solid #ccc; /* Add a border */
+            border-radius: 4px; /* Optional: Add rounded corners */
+            box-sizing: border-box; /* Ensure padding and border are included in the width */
+        }
+        .submit-button {
+            padding: 10px 20px; /* Add padding to the button */
+            font-size: 16px; /* Adjust the font size of the button */
+            background-color: #000000; /* Green background color */
+            color: white; /* White text color */
+            border: none; /* Remove border */
+            border-radius: 4px; /* Optional: Add rounded corners */
+            cursor: pointer; /* Add cursor pointer on hover */
+        }
+        .submit-button:hover {
+            background-color: #408dd5; /* Darker green background color on hover */
+        }
+    </style>
+</head>
+<body>
+    <h1>Enter Your Query</h1>
+    <form action="/query/" method="post">
+        <label for="query">Query:</label><br>
+        <input type="text" id="query" name="query" class="query-input" required><br><br>
+        <input type="submit" value="Submit" class="submit-button">
+    </form>
+</body>
+</html>

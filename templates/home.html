@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grant Finder</title>
+    <style>
+        body {
+            background-color: rgb(133, 202, 211);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            transition: all 0.5s ease;
+        }
+        .main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            width: 100%;
+            transition: all 0.5s ease;
+            padding: 20px; /* Added padding to main container */
+            box-sizing: border-box; /* Ensures padding doesn't increase width */
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+            text-align: center;
+        }
+        h1 {
+            color: #003366;
+            margin: 0;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"], button[type="submit"] {
+            padding: 12px;
+            font-size: 18px;
+            margin-top: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input[type="text"]::placeholder {
+            color: grey;
+        }
+        button[type="submit"] {
+            background-color: #003366;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .result-container {
+            max-width: 800px; /* Increased width for the result container */
+            width: 100%;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+            text-align: left; /* Adjust text alignment for result box */
+            margin-top: 30px;
+            position: relative; /* Ensure relative positioning */
+        }
+        .result-content {
+            white-space: pre-wrap; /* Preserve whitespace and wrap text */
+            font-family: Arial, sans-serif; /* Use the same font family */
+            font-size: 16px; /* Adjust font size if necessary */
+            width: 100%; /* Full width */
+        }
+        .result {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        .error {
+            color: red;
+        }
+        .moved-up {
+            position: relative;
+            top: -50px; /* Adjust as needed */
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <div class="container" id="queryContainer">
+            <h1>Grant Finder</h1><br>
+            <form id="queryForm" method="post" action="/">
+                <input type="text" id="query" name="query" placeholder="Search..." value="{% if query is not none %}{{ query }}{% endif %}" required>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+        
+        <!-- Result Container -->
+        <div class="result-container" id="resultContainer">
+            <div id="result" class="result">
+                {% if response %}
+                <div class="result-content">{{ response | safe }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('queryForm');
+        const queryContainer = document.getElementById('queryContainer');
+        const resultContainer = document.getElementById('resultContainer');
+
+        form.addEventListener('submit', function() {
+            // queryContainer.classList.add('moved-up');
+            resultContainer.style.display = 'block'; // Show result container on form submit
+        });
+    </script>
+</body>
+</html>

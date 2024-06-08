@@ -4,3 +4,11 @@ pgvector
 sentence-transformers
 python-dotenv
 lxml
+fastapi
+
+
+
+python-multipart
+pydantic
+starlette
+uvicorn

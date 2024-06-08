@@ -71,7 +71,7 @@ class CustomXMLLoader:
         return docs
 
 
-xml_file_path = "GrantsDBExtract20240310v2.xml"
+xml_file_path = "GrantsDBExtract20240607v2.xml"
 # xml_file_path = "test.xml"
 loader = CustomXMLLoader()
 documents = loader.load(xml_file_path)

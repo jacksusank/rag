@@ -26,7 +26,7 @@ try:
     cursor.close()
     connection.close()
 
-    # Generic version
+    # Totem version
     connection = psycopg2.connect(
         host="localhost",
         port="5432",

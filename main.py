@@ -1,21 +1,33 @@
-# Queries the database with the user's question and returns the 4 most similar opportunities
-
+from fastapi import FastAPI, Request, Form
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
-import openai
 import psycopg2
 from sentence_transformers import SentenceTransformer
-import sys
-from sentence_transformers import CrossEncoder
-import json
-
+import openai
 import os
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-if __name__ == "__main__":
-    query = sys.argv[1]
-    my_input = query
+import json
+from sentence_transformers import CrossEncoder
+from fastapi.responses import HTMLResponse
 
+
+app = FastAPI()
+
+# Load environment variables
 load_dotenv()
 
+# Mount static directory (if needed)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Load templates directory (if needed)
+templates = Jinja2Templates(directory="templates")
+
+# Initialize models and connections
+model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+
+# Functions to interact with PostgreSQL
 def findSimilarVectors(user_tuple):
     """
     This function performs a similarity search on the database and returns the page content of the 4 opportunities that are most similar to the user's ideal RFP
@@ -298,7 +310,7 @@ def chatWithLLM(my_prompt, function="auto"):
         messages=messages,
         tool_choice=({"type": "function", "function": {"name": function}}) if function != "auto" else function, 
         tools=tools,
-        temperature=0.0
+        temperature=0.0,
     )
 
     output_message = response.choices[0].message
@@ -381,7 +393,7 @@ def opportunity_output_formatter(opportunity1=None, opportunity2=None, opportuni
     else:
         return "I'm sorry, I couldn't find any relevant opportunities for you. Please try again with a different query."
     if opportunity2:
-        output += "\n-<2>-:\n"
+        output += "\n-<2>-\n"
         output += f"Opportunity Title: {opportunity2['OpportunityTitle']}\n"
         output += f"Opportunity ID: {opportunity2['OpportunityID']}\n"
         output += f"Opportunity Number: {opportunity2['OpportunityNumber']}\n"
@@ -390,7 +402,7 @@ def opportunity_output_formatter(opportunity1=None, opportunity2=None, opportuni
     else:
         return output
     if opportunity3:
-        output += "\n-<3>-:\n"
+        output += "\n-<3>-\n"
         output += f"Opportunity Title: {opportunity3['OpportunityTitle']}\n"
         output += f"Opportunity ID: {opportunity3['OpportunityID']}\n"
         output += f"Opportunity Number: {opportunity3['OpportunityNumber']}\n"
@@ -399,7 +411,7 @@ def opportunity_output_formatter(opportunity1=None, opportunity2=None, opportuni
     else:
         return output
     if opportunity4:
-        output += "\n-<4>-:\n"
+        output += "\n-<4>-\n"
         output += f"Opportunity Title: {opportunity4['OpportunityTitle']}\n"
         output += f"Opportunity ID: {opportunity4['OpportunityID']}\n"
         output += f"Opportunity Number: {opportunity4['OpportunityNumber']}\n"
@@ -408,22 +420,17 @@ def opportunity_output_formatter(opportunity1=None, opportunity2=None, opportuni
     return output
 
 
+@app.get("/", response_class=HTMLResponse)
+@app.post("/", response_class=HTMLResponse)
+async def home(request: Request, query: str = Form(None)):
+    response = None
+    if query:
+        ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
 
+        vectorized_ideal_opportunity = model.encode(ideal_opportunity)
+        fully_formatted_ideal_opportunity = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
 
-# First, we need to create a fake RFP that would be perfect for the user's question so that the similarity search can be performed
-ideal_opportunity = chatWithLLM("I want you to create one fake RFP that would be ideal for someone who has this question:" + my_input + ". Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
-
-# Next, we need to vectorize the fake RFP so that it can be compared to the other opportunities in the database
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
-vectorized_ideal_opportunity = model.encode(ideal_opportunity)
-
-fully_formatted_ideal_opportunty = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
-
-# Now, we can perform the similarity search, turning the output into a prompt and then passing this into the LLM model
-print("\n\nResults: ")
-llmInput = promptMaker(reranker(my_input, ranker(fully_formatted_ideal_opportunty)))
-# print("llmInput:", llmInput)
-llmResponse = chatWithLLM(llmInput, "opportunity_output_formatter")
-
-print(llmResponse)
-my_input = "quit"
+        llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
+        response = chatWithLLM(llm_input, "opportunity_output_formatter")
+    
+    return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
