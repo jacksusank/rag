@@ -9,6 +9,7 @@ import os
 import json
 from sentence_transformers import CrossEncoder
 from fastapi.responses import HTMLResponse
+from connect_to_db import connect
 
 
 app = FastAPI()
@@ -26,6 +27,12 @@ templates = Jinja2Templates(directory="templates")
 model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+HOST = os.getenv("DATABASE_HOST")
+DATABASE = os.getenv("DATABASE_NAME")
+USER = os.getenv("DATABASE_USER")
+PASSWORD = os.getenv("DATABASE_PASSWORD")
+
+
 
 # Functions to interact with PostgreSQL
 def findSimilarVectors(user_tuple):
@@ -38,13 +45,16 @@ def findSimilarVectors(user_tuple):
     Returns:
         str: A string containing the original question that was asked by the user followed by the page content of the 4 most similar opportunities
     """
+    connection = connect()
+
+
     # Generic connection to PostgreSQL
-    connection = psycopg2.connect(
-        host="localhost",
-        port="5432",
-        database="totem",
-        user="postgres"
-    )
+    # connection = psycopg2.connect(
+    #     host="localhost",
+    #     port="5432",
+    #     database="totem",
+    #     user="postgres"
+    # )
 
     # Create a cursor
     cursor = connection.cursor()
@@ -91,13 +101,15 @@ def ranker(vector):
     Returns:
         list: A list of the 25 most similar opportunities
     """
+
+    connection = connect()
     # Generic connection to PostgreSQL
-    connection = psycopg2.connect(
-        host="localhost",
-        port="5432",
-        database="totem",
-        user="postgres"
-    )
+    # connection = psycopg2.connect(
+    #     host="localhost",
+    #     port="5432",
+    #     database="totem",
+    #     user="postgres"
+    # )
 
     # Create a cursor
     cursor = connection.cursor()

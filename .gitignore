@@ -2,4 +2,5 @@
 GrantsDBExtract*.xml
 .venv
 .DS_Store
+totem_dump.sql
 __pycache__
