@@ -151,6 +151,7 @@ def reranker(query, relevant_opportunities):
     # Pair up the scores and opportunities for sorting
     scored_opportunities = list(zip(scores, relevant_opportunities))
 
+
     # Sort by score in descending order
     scored_opportunities.sort(key=lambda x: x[0])
 
