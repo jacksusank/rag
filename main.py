@@ -342,7 +342,7 @@ def chatWithLLM(my_prompt, function="auto"):
                                 "OpportunityID": {"type": "integer"},
                                 "OpportunityNumber": {"type": "string"},
                                 "CFDANumber": {"type": "string"},
-                                "Description": {"type": "string", "description": "The description of the opportunity. This is normally several sentences long and it ends with '|'."},"},
+                                "Description": {"type": "string", "description": "The description of the opportunity. This is normally several sentences long and it ends with '|'."},
                                 "Grants.gov URL": {"type": "string", "description": "URL in the format: https://www.grants.gov/search-results-detail/{OpportunityID}"},
                                 "AdditionalInformationURL": {"type": "string", "description": "URL found in the opportunity database or 'Not Found'."}
                             },
