@@ -11,7 +11,6 @@ print(HOST, DATABASE, USER, PASSWORD, PORT)
 
 def connect(host=HOST, port=None, database=DATABASE, user=USER, password=PASSWORD):
     try:
-        # connection = psycopg2.connect("postgres://koyeb-adm:aLr3nmWY5Qyh@ep-spring-cell-a4p8l1g0.us-east-1.pg.koyeb.app/koyebdb")
         connection = psycopg2.connect(
             host=host,
             port=port if port else None,
