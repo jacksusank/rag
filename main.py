@@ -438,7 +438,7 @@ def chatWithLLM(my_prompt, function="auto"):
             function_to_call = available_functions.get(function_name)
             function_args = json.loads(tool_calls[0].function.arguments)
             function_response = function_to_call(
-                opportunity1=function_args.get("opportunities")
+                opportunities=function_args.get("opportunities")
             )
     return function_response
 
