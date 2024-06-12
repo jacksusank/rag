@@ -27,12 +27,6 @@ templates = Jinja2Templates(directory="templates")
 model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-HOST = os.getenv("DATABASE_HOST")
-DATABASE = os.getenv("DATABASE_NAME")
-USER = os.getenv("DATABASE_USER")
-PASSWORD = os.getenv("DATABASE_PASSWORD")
-
-
 
 # Functions to interact with PostgreSQL
 def findSimilarVectors(user_tuple):
@@ -187,8 +181,8 @@ def promptMaker(input):
         str: A string containing the prompt that the LLM model will respond to
     """
     prompt = (
-        "You are a world-class advisor to nonprofits seeking the best grants for their organization. "
-        "You will receive the user's query and relevant context. Use this context to answer the query. "
+        "You are a world-class advisor to nonprofits that are seeking the best grants for their organization. "
+        "You will receive a user's query and relevant context. Use this context to answer the query. "
         "If none of the opportunities are suitable, inform the user.\n\n"
         "User's query and context:\n"
         f"{input}"
@@ -226,9 +220,10 @@ def chatWithLLM(my_prompt, function="auto"):
                             "OpportunityID": {"type": "integer"},
                             "OpportunityNumber": {"type": "string"},
                             "CFDANumber": {"type": "string"},
-                            "Description": {"type": "string"},
+                            "Description": {"type": "string", "description": "The description of the opportunity. This is normally several sentences long."},
+                            "Link": {"type": "string", "description": "This is a URL. It is commonly found in either the AdditionalInformationURL field, the AdditionalInformationText field, or the Discription Field. If it is not found in any of these fields, it is not included in the output so say 'Not Found' if it is not found."}
                         },
-                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description"]
+                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description", "Link"]
                     },
                     "opportunity2": {
                         "type": "object",
@@ -238,9 +233,11 @@ def chatWithLLM(my_prompt, function="auto"):
                             "OpportunityID": {"type": "integer"},
                             "OpportunityNumber": {"type": "string"},
                             "CFDANumber": {"type": "string"},
-                            "Description": {"type": "string"},
+                            "Description": {"type": "string", "description": "The description of the opportunity. This is normally several sentences long."},
+                            "Link": {"type": "string", "description": "This is a URL. It is commonly found in either the AdditionalInformationURL field, the AdditionalInformationText field, or the Discription Field. If it is not found in any of these fields, it is not included in the output so say 'Not Found' if it is not found."}
+
                         },
-                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description"]
+                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description", "Link"]
                     },
                     "opportunity3": {
                         "type": "object",
@@ -250,9 +247,11 @@ def chatWithLLM(my_prompt, function="auto"):
                             "OpportunityID": {"type": "integer"},
                             "OpportunityNumber": {"type": "string"},
                             "CFDANumber": {"type": "string"},
-                            "Description": {"type": "string"},
+                            "Description": {"type": "string", "description": "The description of the opportunity. This is normally several sentences long."},
+                            "Link": {"type": "string", "description": "This is a URL. It is commonly found in either the AdditionalInformationURL field, the AdditionalInformationText field, or the Discription Field. If it is not found in any of these fields, it is not included in the output so say 'Not Found' if it is not found."}
+
                         },
-                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description"]
+                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description", "Link"]
                     },
                     "opportunity4": {
                         "type": "object",
@@ -262,9 +261,11 @@ def chatWithLLM(my_prompt, function="auto"):
                             "OpportunityID": {"type": "integer"},
                             "OpportunityNumber": {"type": "string"},
                             "CFDANumber": {"type": "string"},
-                            "Description": {"type": "string"},
+                            "Description": {"type": "string", "description": "The description of the opportunity. This is normally several sentences long."},
+                            "Link": {"type": "string", "description": "This is a URL. It is commonly found in either the AdditionalInformationURL field, the AdditionalInformationText field, or the Discription Field. If it is not found in any of these fields, it is not included in the output so say 'Not Found' if it is not found."}
+
                         },
-                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description"]
+                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description", "Link"]
                     },
                 },
                 "required": [],

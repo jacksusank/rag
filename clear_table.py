@@ -1,13 +1,15 @@
 import psycopg2
+from connect_to_db import connect
 
 # # Generic version
-connection = psycopg2.connect(
-    host="localhost",
-    port="5432",
-    database="totem",
-    user="postgres",
-    password="test"
-    )
+connection = connect()
+# connection = psycopg2.connect(
+#     host="localhost",
+#     port="5432",
+#     database="totem",
+#     user="postgres",
+#     password="test"
+#     )
 
 cursor = connection.cursor()
 
