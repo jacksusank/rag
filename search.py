@@ -8,6 +8,7 @@ import sys
 from sentence_transformers import CrossEncoder
 import json
 
+
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 if __name__ == "__main__":
