@@ -7,6 +7,7 @@ USER = os.getenv("DATABASE_USER")
 PASSWORD = os.getenv("DATABASE_PASSWORD")
 PORT = os.getenv("DATABASE_PORT")
 
+
 print(HOST, DATABASE, USER, PASSWORD, PORT)
 
 def connect(host=HOST, port=None, database=DATABASE, user=USER, password=PASSWORD):
