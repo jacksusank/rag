@@ -1,27 +1,25 @@
-import psycopg2
 import os
+import sqlite3
+import struct
+from typing import List
+
+import sqlean
+import sqlean.dbapi2
+import sqlite_vec
 
 
+def serialize_f32(vector: List[float]) -> bytes:
+    """serializes a list of floats into a compact "raw bytes" format"""
+    return struct.pack("%sf" % len(vector), *vector)
 
 
-HOST = os.getenv("DATABASE_HOST")
-DATABASE = os.getenv("DATABASE_NAME")
-USER = os.getenv("DATABASE_USER")
-PASSWORD = os.getenv("DATABASE_PASSWORD")
-PORT = os.getenv("DATABASE_PORT")
+def connect() -> sqlite3.Connection:
+    connection: sqlite3.Connection = sqlean.connect("totem.db")  # type: ignore
+    connection.enable_load_extension(True)
+    sqlite_vec.load(connection)
+    connection.enable_load_extension(False)
+    return connection
 
-print(HOST, DATABASE, USER, PASSWORD, PORT)
 
-def connect(host=HOST, port=None, database=DATABASE, user=USER, password=PASSWORD):
-    try:
-        connection = psycopg2.connect(
-            host=host,
-            port=port if port else None,
-            database=database,
-            user=user,
-            password=password
-        )
-        return connection
-    except psycopg2.Error as e:
-        print(f"Error connecting to PostgreSQL database: {e}")
-        return None
+def delete_database():
+    os.remove("totem.db")

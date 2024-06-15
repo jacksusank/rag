@@ -4,3 +4,4 @@ GrantsDBExtract*.xml
 .DS_Store
 totem_dump.sql
 __pycache__
+totem.db

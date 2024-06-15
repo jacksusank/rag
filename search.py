@@ -1,21 +1,19 @@
 # Queries the database with the user's question and returns the 4 most similar opportunities
 
-from dotenv import load_dotenv
-import openai
-import psycopg2
-from sentence_transformers import SentenceTransformer
-import sys
-from sentence_transformers import CrossEncoder
 import json
-
-
 import os
+
+import openai
+from dotenv import load_dotenv
+from sentence_transformers import CrossEncoder, SentenceTransformer
+
+import connect_to_db
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-if __name__ == "__main__":
-    query = sys.argv[1]
-    my_input = query
+connection = connect_to_db.connect()
 
 load_dotenv()
+
 
 def findSimilarVectors(user_tuple):
     """
@@ -28,12 +26,6 @@ def findSimilarVectors(user_tuple):
         str: A string containing the original question that was asked by the user followed by the page content of the 4 most similar opportunities
     """
     # Generic connection to PostgreSQL
-    connection = psycopg2.connect(
-        host="localhost",
-        port="5432",
-        database="totem",
-        user="postgres"
-    )
 
     # Create a cursor
     cursor = connection.cursor()
@@ -56,16 +48,21 @@ def findSimilarVectors(user_tuple):
     choices = ["one", "another", "yet another", "another"]
     for row in results:
         page_contents, similarity_score = row
-        intro = ("Here are the details of " + choices[i] + " relevant opportunity with a similarity score of " + str(similarity_score) + ":\n")
-        output += intro 
-        output += (str(page_contents) + "\n")
+        intro = (
+            "Here are the details of "
+            + choices[i]
+            + " relevant opportunity with a similarity score of "
+            + str(similarity_score)
+            + ":\n"
+        )
+        output += intro
+        output += str(page_contents) + "\n"
         # print("Page Contents: ", page_contents)
         # print("Similarity Score: ", similarity_score)
         i += 1
 
     # Close cursor and connection
     cursor.close()
-    connection.close()
 
     return user_tuple[1] + output
 
@@ -73,31 +70,34 @@ def findSimilarVectors(user_tuple):
 def ranker(vector):
     """
     This function performs a similarity search on the embeddings in the database and returns the 25 most similar opportunities
-    
+
     Args:
         user_tuple (tuple): A tuple containing the vectorized version of the fake RFP that was created and the user's query. (vectorized fake rfp, query)
-        
+
     Returns:
         list: A list of the 25 most similar opportunities
     """
     # Generic connection to PostgreSQL
-    connection = psycopg2.connect(
-        host="localhost",
-        port="5432",
-        database="totem",
-        user="postgres"
-    )
 
     # Create a cursor
     cursor = connection.cursor()
 
     # Perform cosine similarity search
     # Returns the page contents of the 25 most similar opportunities
+    # insert_query = """
+    # SELECT page_contents, (embeddings <=> (%s::vector)) AS cosine_distance
+    # FROM totemembeddings
+    # ORDER BY cosine_distance
+    # LIMIT 25;
+    # """
     insert_query = """
-    SELECT page_contents, (embeddings <=> (%s::vector)) AS cosine_distance
-    FROM totemembeddings
-    ORDER BY cosine_distance
-    LIMIT 25;
+    SELECT
+        rowid,
+        distance
+      FROM embeddings
+      WHERE embedding MATCH ?
+      ORDER BY distance
+      LIMIT 25
     """
 
     cursor.execute(insert_query, (vector,))
@@ -105,10 +105,19 @@ def ranker(vector):
     # Fetch and process the results
     results = cursor.fetchall()
 
+    ids = [row[0] for row in results]
+    scores = [row[1] for row in results]
+
+    # find page contents by id
+    query = f"SELECT page_contents FROM data WHERE id IN ({','.join(['?']*len(ids))})"
+
+    cursor.execute(query, ids)
+
+    results = cursor.fetchall()
+
     # Close cursor and connection
     cursor.close()
-    connection.close()
-    return results
+    return list(zip((r[0] for r in results), scores))
 
 
 def reranker(query, relevant_opportunities):
@@ -122,7 +131,7 @@ def reranker(query, relevant_opportunities):
     Returns:
         list: A list of the 4 most similar opportunities re-ranked based on the user's query
     """
-    ce = CrossEncoder('BAAI/bge-reranker-large')
+    ce = CrossEncoder("BAAI/bge-reranker-large")
 
     # Create pairs of the user's query and the page content of the opportunities
     pairs = [(query, opp[0]) for opp in relevant_opportunities]
@@ -145,9 +154,9 @@ def reranker(query, relevant_opportunities):
     choices = ["one", "another", "yet another", "another"]
     for opp in top_opportunities:
         page_contents = opp[0]
-        intro = ("Here are the details of " + choices[i] + " relevant opportunity:\n")
-        output += intro 
-        output += (str(page_contents) + "\n")
+        intro = "Here are the details of " + choices[i] + " relevant opportunity:\n"
+        output += intro
+        output += str(page_contents) + "\n"
         i += 1
 
     return query + output
@@ -181,73 +190,98 @@ def chatWithLLM(my_prompt, function="auto"):
     Args:
         my_prompt (str): The prompt that the LLM model will respond to
         function (str): The function that the LLM model will use to format the output
-    
+
     Returns:
         str: The response from the LLM model
     """
     messages = [{"role": "user", "content": my_prompt}]
     tools = [
         {
-        "type": "function",
-        "function": {
-            "name": "opportunity_output_formatter",
-            "description": "Use this format if the user wants to see the details of the top four real opportunities that are relevant to their question.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "opportunity1": {
-                        "type": "object",
-                        "description": "A dictionary containing the details of the first opportunity.",
-                        "properties": {
-                            "OpportunityTitle": {"type": "string"},
-                            "OpportunityID": {"type": "integer"},
-                            "OpportunityNumber": {"type": "string"},
-                            "CFDANumber": {"type": "string"},
-                            "Description": {"type": "string"},
+            "type": "function",
+            "function": {
+                "name": "opportunity_output_formatter",
+                "description": "Use this format if the user wants to see the details of the top four real opportunities that are relevant to their question.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "opportunity1": {
+                            "type": "object",
+                            "description": "A dictionary containing the details of the first opportunity.",
+                            "properties": {
+                                "OpportunityTitle": {"type": "string"},
+                                "OpportunityID": {"type": "integer"},
+                                "OpportunityNumber": {"type": "string"},
+                                "CFDANumber": {"type": "string"},
+                                "Description": {"type": "string"},
+                            },
+                            "required": [
+                                "OpportunityTitle",
+                                "OpportunityID",
+                                "OpportunityNumber",
+                                "CFDANumber",
+                                "Description",
+                            ],
                         },
-                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description"]
-                    },
-                    "opportunity2": {
-                        "type": "object",
-                        "description": "A dictionary containing the details of the second opportunity.",
-                        "properties": {
-                            "OpportunityTitle": {"type": "string"},
-                            "OpportunityID": {"type": "integer"},
-                            "OpportunityNumber": {"type": "string"},
-                            "CFDANumber": {"type": "string"},
-                            "Description": {"type": "string"},
+                        "opportunity2": {
+                            "type": "object",
+                            "description": "A dictionary containing the details of the second opportunity.",
+                            "properties": {
+                                "OpportunityTitle": {"type": "string"},
+                                "OpportunityID": {"type": "integer"},
+                                "OpportunityNumber": {"type": "string"},
+                                "CFDANumber": {"type": "string"},
+                                "Description": {"type": "string"},
+                            },
+                            "required": [
+                                "OpportunityTitle",
+                                "OpportunityID",
+                                "OpportunityNumber",
+                                "CFDANumber",
+                                "Description",
+                            ],
                         },
-                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description"]
-                    },
-                    "opportunity3": {
-                        "type": "object",
-                        "description": "A dictionary containing the details of the third opportunity.",
-                        "properties": {
-                            "OpportunityTitle": {"type": "string"},
-                            "OpportunityID": {"type": "integer"},
-                            "OpportunityNumber": {"type": "string"},
-                            "CFDANumber": {"type": "string"},
-                            "Description": {"type": "string"},
+                        "opportunity3": {
+                            "type": "object",
+                            "description": "A dictionary containing the details of the third opportunity.",
+                            "properties": {
+                                "OpportunityTitle": {"type": "string"},
+                                "OpportunityID": {"type": "integer"},
+                                "OpportunityNumber": {"type": "string"},
+                                "CFDANumber": {"type": "string"},
+                                "Description": {"type": "string"},
+                            },
+                            "required": [
+                                "OpportunityTitle",
+                                "OpportunityID",
+                                "OpportunityNumber",
+                                "CFDANumber",
+                                "Description",
+                            ],
                         },
-                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description"]
-                    },
-                    "opportunity4": {
-                        "type": "object",
-                        "description": "A dictionary containing the details of the fourth opportunity.",
-                        "properties": {
-                            "OpportunityTitle": {"type": "string"},
-                            "OpportunityID": {"type": "integer"},
-                            "OpportunityNumber": {"type": "string"},
-                            "CFDANumber": {"type": "string"},
-                            "Description": {"type": "string"},
+                        "opportunity4": {
+                            "type": "object",
+                            "description": "A dictionary containing the details of the fourth opportunity.",
+                            "properties": {
+                                "OpportunityTitle": {"type": "string"},
+                                "OpportunityID": {"type": "integer"},
+                                "OpportunityNumber": {"type": "string"},
+                                "CFDANumber": {"type": "string"},
+                                "Description": {"type": "string"},
+                            },
+                            "required": [
+                                "OpportunityTitle",
+                                "OpportunityID",
+                                "OpportunityNumber",
+                                "CFDANumber",
+                                "Description",
+                            ],
                         },
-                        "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description"]
                     },
+                    "required": [],
                 },
-                "required": [],
             },
-        }
-        }, {
+        },
+        {
             "type": "function",
             "function": {
                 "name": "ideal_rfp_formatter",
@@ -286,20 +320,31 @@ def chatWithLLM(my_prompt, function="auto"):
                         "Description": {
                             "type": "string",
                             "description": "The description of the opportunity",
-                        }
+                        },
                     },
-                    "required": ["OpportunityTitle", "OpportunityCategory", "FundingInstrumentType", "CategoryOfFundingActivity", "EligibleApplicants", "AdditionalInformationOnEligibility", "AgencyName", "Description"],
-                    }
+                    "required": [
+                        "OpportunityTitle",
+                        "OpportunityCategory",
+                        "FundingInstrumentType",
+                        "CategoryOfFundingActivity",
+                        "EligibleApplicants",
+                        "AdditionalInformationOnEligibility",
+                        "AgencyName",
+                        "Description",
+                    ],
                 },
-        }
+            },
+        },
     ]
 
     response = openai.chat.completions.create(
         model="gpt-3.5-turbo",  # Choose the GPT model,
         messages=messages,
-        tool_choice=({"type": "function", "function": {"name": function}}) if function != "auto" else function, 
+        tool_choice=({"type": "function", "function": {"name": function}})
+        if function != "auto"
+        else function,
         tools=tools,
-        temperature=0.0
+        temperature=0.0,
     )
 
     output_message = response.choices[0].message
@@ -308,25 +353,39 @@ def chatWithLLM(my_prompt, function="auto"):
     if tool_calls:
         available_functions = {
             "ideal_rfp_formatter": ideal_rfp_formatter,
-            "opportunity_output_formatter": opportunity_output_formatter 
+            "opportunity_output_formatter": opportunity_output_formatter,
         }
         if tool_calls[0].function.name == "ideal_rfp_formatter":
             function_name = tool_calls[0].function.name
             function_to_call = available_functions.get(function_name)
+            if function_to_call is None:
+                print("Function not found")
+                raise Exception(
+                    "I'm sorry, I couldn't find any relevant opportunities for you. Please try again with a different query."
+                )
             function_args = json.loads(tool_calls[0].function.arguments)
             function_response = function_to_call(
                 OpportunityTitle=function_args.get("OpportunityTitle"),
                 OpportunityCategory=function_args.get("OpportunityCategory"),
                 FundingInstrumentType=function_args.get("FundingInstrumentType"),
-                CategoryOfFundingActivity=function_args.get("CategoryOfFundingActivity"),
+                CategoryOfFundingActivity=function_args.get(
+                    "CategoryOfFundingActivity"
+                ),
                 EligibleApplicants=function_args.get("EligibleApplicants"),
-                AdditionalInformationOnEligibility=function_args.get("AdditionalInformationOnEligibility"),
+                AdditionalInformationOnEligibility=function_args.get(
+                    "AdditionalInformationOnEligibility"
+                ),
                 AgencyName=function_args.get("AgencyName"),
                 Description=function_args.get("Description"),
             )
         if tool_calls[0].function.name == "opportunity_output_formatter":
             function_name = tool_calls[0].function.name
             function_to_call = available_functions.get(function_name)
+            if function_to_call is None:
+                print("Function not found")
+                raise Exception(
+                    "I'm sorry, I couldn't find any relevant opportunities for you. Please try again with a different query."
+                )
             function_args = json.loads(tool_calls[0].function.arguments)
             function_response = function_to_call(
                 opportunity1=function_args.get("opportunity1"),
@@ -337,7 +396,16 @@ def chatWithLLM(my_prompt, function="auto"):
     return function_response
 
 
-def ideal_rfp_formatter(OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, Description):
+def ideal_rfp_formatter(
+    OpportunityTitle,
+    OpportunityCategory,
+    FundingInstrumentType,
+    CategoryOfFundingActivity,
+    EligibleApplicants,
+    AdditionalInformationOnEligibility,
+    AgencyName,
+    Description,
+):
     """
     This function formats the ideal RFP for the user
 
@@ -357,7 +425,9 @@ def ideal_rfp_formatter(OpportunityTitle, OpportunityCategory, FundingInstrument
     return f"The OpportunityTitle is {OpportunityTitle}. The OpportunityCategory is {OpportunityCategory}. The FundingInstrumentType is {FundingInstrumentType}. The CategoryOfFundingActivity is {CategoryOfFundingActivity}. The EligibleApplicants is {EligibleApplicants}. The AdditionalInformationOnEligibility is {AdditionalInformationOnEligibility}. The AgencyName is {AgencyName}. The Description is {Description}."
 
 
-def opportunity_output_formatter(opportunity1=None, opportunity2=None, opportunity3=None, opportunity4=None):
+def opportunity_output_formatter(
+    opportunity1=None, opportunity2=None, opportunity3=None, opportunity4=None
+):
     """
     This function reformats the output of the LLM model
 
@@ -409,22 +479,33 @@ def opportunity_output_formatter(opportunity1=None, opportunity2=None, opportuni
     return output
 
 
+if __name__ == "__main__":
+    # query = sys.argv[1]
+    # my_input = query
+    ideal_opportunity = "Totem is a nonprofit organization that supports mental health through guided introspection circles. These circles are inspired by indigenous talking circles and offer a safe, inclusive space for participants to share their thoughts and feelings. Totem's services include online video support groups moderated by trained Keepers, focusing on mindfulness and community support. The organization prioritizes privacy and confidentiality, ensuring all communications are HIPAA-compliant. Totem aims to complement existing mental health services and foster a sense of belonging and emotional resilience."
+    my_input = ideal_opportunity
 
+    # First, we need to create a fake RFP that would be perfect for the user's question so that the similarity search can be performed
+    # ideal_opportunity = chatWithLLM(
+    #     "I want you to create one fake RFP that would be ideal for someone who has this question:"
+    #     + my_input
+    #     + ". Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.",
+    #     "ideal_rfp_formatter",
+    # )
 
-# First, we need to create a fake RFP that would be perfect for the user's question so that the similarity search can be performed
-ideal_opportunity = chatWithLLM("I want you to create one fake RFP that would be ideal for someone who has this question:" + my_input + ". Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
+    # Next, we need to vectorize the fake RFP so that it can be compared to the other opportunities in the database
+    model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
+    vectorized_ideal_opportunity = model.encode(ideal_opportunity)
+    fully_formatted_ideal_opportunty = connect_to_db.serialize_f32(
+        vectorized_ideal_opportunity.tolist()
+    )
+    # Now, we can perform the similarity search, turning the output into a prompt and then passing this into the LLM model
+    print("\n\nResults: ")
+    rank_results = ranker(fully_formatted_ideal_opportunty)
+    # print("rank_results:", rank_results)
+    llmInput = promptMaker(reranker(my_input, rank_results))
+    print("llmInput:", llmInput)
+    # llmResponse = chatWithLLM(llmInput, "opportunity_output_formatter")
 
-# Next, we need to vectorize the fake RFP so that it can be compared to the other opportunities in the database
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
-vectorized_ideal_opportunity = model.encode(ideal_opportunity)
-
-fully_formatted_ideal_opportunty = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
-
-# Now, we can perform the similarity search, turning the output into a prompt and then passing this into the LLM model
-print("\n\nResults: ")
-llmInput = promptMaker(reranker(my_input, ranker(fully_formatted_ideal_opportunty)))
-# print("llmInput:", llmInput)
-llmResponse = chatWithLLM(llmInput, "opportunity_output_formatter")
-
-print(llmResponse)
-my_input = "quit"
+    # print(llmResponse)
+    my_input = "quit"
