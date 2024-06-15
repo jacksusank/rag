@@ -1,4 +1,3 @@
-import psycopg2
 from connect_to_db import connect
 
 # # Generic version
@@ -23,10 +22,9 @@ cursor.execute("""
 """)
 
 # If it exists, truncate it
-if cursor.fetchone()[0]:
+if cursor.fetchone():
     cursor.execute("TRUNCATE TABLE totemembeddings RESTART IDENTITY")
 
 connection.commit()
 cursor.close()
 connection.close()
-
