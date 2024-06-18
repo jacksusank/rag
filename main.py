@@ -11,6 +11,8 @@ from sentence_transformers import CrossEncoder
 from fastapi.responses import HTMLResponse
 from connect_to_db import connect
 from pyinstrument import Profiler
+import logging
+
 
 
 
@@ -394,6 +396,10 @@ def profile_func(func):
 @profile_func
 async def home(request: Request, query: str = Form(None)):
     response = None
+
+    profiler = Profiler()
+    profiler.start()
+
     if query:
         ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
 
@@ -402,8 +408,15 @@ async def home(request: Request, query: str = Form(None)):
 
         llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
         response = chatWithLLM(llm_input, "opportunity_output_formatter")
-    return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
 
+    profiler.stop()
+
+
+    # Log profiling results
+    logging.info("Profiling Results:")
+    logging.info(profiler.output_text(unicode=True, color=True))  # Print profiling results to logs
+
+    return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
 
 
 

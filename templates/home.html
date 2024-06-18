@@ -41,7 +41,7 @@
             box-sizing: border-box;
         }
         .container {
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
             background-color: #fff;
             padding: 20px;
@@ -57,7 +57,7 @@
         label {
             font-weight: bold;
         }
-        input[type="text"], button[type="submit"] {
+        textarea, button[type="submit"] {
             padding: 12px;
             font-size: 18px;
             margin-top: 8px;
@@ -67,7 +67,10 @@
             width: 100%;
             box-sizing: border-box;
         }
-        input[type="text"]::placeholder {
+        textarea {
+            height: 200px; /* Increase height for paragraph input */
+        }
+        textarea::placeholder {
             color: grey;
         }
         button[type="submit"] {
@@ -98,7 +101,6 @@
             width: 100%;
             margin-top: 0; 
             padding-top: 0; 
-
         }
         .result {
             margin-top: 10px; 
@@ -133,6 +135,20 @@
         .opportunity strong {
             color: #003366;
         }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #003366;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            display: none; /* Hide loader initially */
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -143,11 +159,13 @@
         <div class="container" id="queryContainer">
             <h2>Find the Best Grants for Your Organization</h2><br>
             <form id="queryForm" method="post" action="/">
-                <input type="text" id="query" name="query" placeholder="Search..." value="{% if query is not none %}{{ query }}{% endif %}" required>
+                <textarea id="query" name="query" placeholder="Enter a detailed description of your organization and needs..." required>{% if query is not none %}{{ query }}{% endif %}</textarea>
                 <button type="submit">Submit</button>
             </form>
         </div>
         
+        <div class="loader" id="loader"></div> <!-- Loading Circle -->
+
         <!-- Result Container -->
         <div class="result-container" id="resultContainer">
             <div id="result" class="result">
@@ -182,9 +200,30 @@
         const form = document.getElementById('queryForm');
         const queryContainer = document.getElementById('queryContainer');
         const resultContainer = document.getElementById('resultContainer');
+        const loader = document.getElementById('loader');
 
-        form.addEventListener('submit', function() {
-            resultContainer.style.display = 'block';
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent form submission to handle it with JS
+
+            loader.style.display = 'block'; // Show loader
+            resultContainer.style.display = 'none'; // Hide results
+
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: form.method,
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                resultContainer.innerHTML = data;
+                loader.style.display = 'none'; // Hide loader
+                resultContainer.style.display = 'block'; // Show results
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loader.style.display = 'none'; // Hide loader in case of error
+                resultContainer.style.display = 'block'; // Show results (you might want to show an error message here)
+            });
         });
     </script>
 </body>
