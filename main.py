@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, HTTPException
 # from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
@@ -381,43 +381,46 @@ def opportunity_output_formatter(opportunities):
 
 
 
-def profile_func(func):
-    async def wrapper(*args, **kwargs):
-        profiler = Profiler()
-        profiler.start()
-        result = await func(*args, **kwargs)
-        profiler.stop()
-        print(profiler.output_text(unicode=True, color=True))  # Print profiling results to the console
-        return result
-    return wrapper
-
 @app.get("/", response_class=HTMLResponse)
 @app.post("/", response_class=HTMLResponse)
-@profile_func
 async def home(request: Request, query: str = Form(None)):
     response = None
 
     profiler = Profiler()
     profiler.start()
 
-    if query:
-        ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
+    try:
+        if query:
+            ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
 
-        vectorized_ideal_opportunity = model.encode(ideal_opportunity)
-        fully_formatted_ideal_opportunity = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
+            vectorized_ideal_opportunity = model.encode(ideal_opportunity)
+            fully_formatted_ideal_opportunity = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
 
-        llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
-        response = chatWithLLM(llm_input, "opportunity_output_formatter")
+            llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
+            response = chatWithLLM(llm_input, "opportunity_output_formatter")
 
-    profiler.stop()
+        profiler.stop()
 
+        logging.info("Profiling Results:")
+        logging.info(profiler.output_text(unicode=True, color=True))
 
-    # Log profiling results
-    logging.info("Profiling Results:")
-    logging.info(profiler.output_text(unicode=True, color=True))  # Print profiling results to logs
+        return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
+    
+    except Exception as e:
+        logging.error(f"An error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
-    return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
-
+# Sample usage of the `@profile_func` decorator
+def profile_func(func):
+    async def wrapper(*args, **kwargs):
+        profiler = Profiler()
+        profiler.start()
+        result = await func(*args, **kwargs)
+        profiler.stop()
+        logging.info("Profiling Results:")
+        logging.info(profiler.output_text(unicode=True, color=True))
+        return result
+    return wrapper
 
 
 
