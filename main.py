@@ -31,6 +31,10 @@ templates = Jinja2Templates(directory="templates")
 model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+
 
 # Functions to interact with PostgreSQL
 def findSimilarVectors(user_tuple):
