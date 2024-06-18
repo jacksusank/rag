@@ -10,6 +10,8 @@ import json
 from sentence_transformers import CrossEncoder
 from fastapi.responses import HTMLResponse
 from connect_to_db import connect
+from pyinstrument import Profiler
+
 
 
 app = FastAPI()
@@ -194,7 +196,7 @@ def promptMaker(input):
 
 def chatWithLLM(my_prompt, function="auto"):
     """
-    This function uses GPT-3.5-turbo to respond to a prompt
+    This function uses gpt-4o to respond to a prompt
 
     Args:
         my_prompt (str): The prompt that the LLM model will respond to
@@ -204,125 +206,6 @@ def chatWithLLM(my_prompt, function="auto"):
         str: The response from the LLM model
     """
     messages = [{"role": "user", "content": my_prompt}]
-    # tools = [
-    #     {
-    #     "type": "function",
-    #     "function": {
-    #         "name": "opportunity_output_formatter",
-    #         "description": "Use this format if the user wants to see the details of the top four real opportunities that are relevant to their question.",
-    #         "parameters": {
-    #             "type": "object",
-    #             "properties": {
-    #                 "opportunity1": {
-    #                     "type": "object",
-    #                     "description": "A dictionary containing the details of the first opportunity.",
-    #                     "properties": {
-    #                         "OpportunityTitle": {"type": "string"},
-    #                         "OpportunityID": {"type": "integer"},
-    #                         "OpportunityNumber": {"type": "string"},
-    #                         "CFDANumber": {"type": "string"},
-    #                         "Description": {"type": "string", "description": "The description of the opportunity. This is normally several sentences long."},
-    #                         "Grants.gov URL": {"type": "string", "description": "This is a URL. I want you to synthesize it by using this format: https://www.grants.gov/search-results-detail/******    I want you to replace ****** with the OpportunityID. For example, if the OpportunityID is 123456, the Grants.gov URL should be https://www.grants.gov/search-results-detail/123456}"},
-    #                         "AdditionalInformationURL": {"type": "string", "description": "This is a URL found within the opportunity database. It is commonly found in either the AdditionalInformationURL field, the AdditionalInformationText field, or the Discription Field. If it is not found in any of these fields, it is not included in the output so say 'Not Found'."}
-
-    #                     },
-    #                     "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description", "Grants.gov URL", "AdditionalInformationURL"]
-    #                 },
-    #                 "opportunity2": {
-    #                     "type": "object",
-    #                     "description": "A dictionary containing the details of the second opportunity.",
-    #                     "properties": {
-    #                         "OpportunityTitle": {"type": "string"},
-    #                         "OpportunityID": {"type": "integer"},
-    #                         "OpportunityNumber": {"type": "string"},
-    #                         "CFDANumber": {"type": "string"},
-    #                         "Description": {"type": "string", "description": "The description of the opportunity. This is normally several sentences long."},
-    #                         "Grants.gov URL": {"type": "string", "description": "This is a URL. I want you to synthesize it by using this format: https://www.grants.gov/search-results-detail/{opportunityID}}"},
-    #                         "AdditionalInformationURL": {"type": "string", "description": "This is a URL found within the opportunity database. It is commonly found in either the AdditionalInformationURL field, the AdditionalInformationText field, or the Discription Field. If it is not found in any of these fields, it is not included in the output so say 'Not Found'."}
-
-    #                     },
-    #                     "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description", "Grants.gov URL", "AdditionalInformationURL"]
-    #                 },
-    #                 "opportunity3": {
-    #                     "type": "object",
-    #                     "description": "A dictionary containing the details of the third opportunity.",
-    #                     "properties": {
-    #                         "OpportunityTitle": {"type": "string"},
-    #                         "OpportunityID": {"type": "integer"},
-    #                         "OpportunityNumber": {"type": "string"},
-    #                         "CFDANumber": {"type": "string"},
-    #                         "Description": {"type": "string", "description": "The description of the opportunity. This is normally several sentences long and it ends with '|'."},
-    #                         "Grants.gov URL": {"type": "string", "description": "This is a URL. I want you to synthesize it by using this format: https://www.grants.gov/search-results-detail/{opportunityID}}"},
-    #                         "AdditionalInformationURL": {"type": "string", "description": "This is a URL found within the opportunity database. It is commonly found in either the AdditionalInformationURL field, the AdditionalInformationText field, or the Discription Field. If it is not found in any of these fields, it is not included in the output so say 'Not Found'."}
-
-    #                     },
-    #                     "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description", "Grants.gov URL", "AdditionalInformationURL"]
-    #                 },
-    #                 "opportunity4": {
-    #                     "type": "object",
-    #                     "description": "A dictionary containing the details of the fourth opportunity.",
-    #                     "properties": {
-    #                         "OpportunityTitle": {"type": "string"},
-    #                         "OpportunityID": {"type": "integer"},
-    #                         "OpportunityNumber": {"type": "string"},
-    #                         "CFDANumber": {"type": "string"},
-    #                         "Description": {"type": "string", "description": "The description of the opportunity. This is normally several sentences long."},
-    #                         "Grants.gov URL": {"type": "string", "description": "This is a URL. I want you to synthesize it by using this format: https://www.grants.gov/search-results-detail/{opportunityID}}"},
-    #                         "AdditionalInformationURL": {"type": "string", "description": "This is a URL found within the opportunity database. It is commonly found in either the AdditionalInformationURL field, the AdditionalInformationText field, or the Discription Field. If it is not found in any of these fields, it is not included in the output so say 'Not Found'."}
-
-    #                     },
-    #                     "required": ["OpportunityTitle", "OpportunityID", "OpportunityNumber", "CFDANumber", "Description", "Grants.gov URL", "AdditionalInformationURL"]
-    #                 },
-    #             },
-    #             "required": [],
-    #         },
-    #     }
-    #     }, {
-    #         "type": "function",
-    #         "function": {
-    #             "name": "ideal_rfp_formatter",
-    #             "description": "Use this output format if the user wants to see the ideal RFP for the user's query.",
-    #             "parameters": {
-    #                 "type": "object",
-    #                 "properties": {
-    #                     "OpportunityTitle": {
-    #                         "type": "string",
-    #                         "description": "The title of the opportunity",
-    #                     },
-    #                     "OpportunityCategory": {
-    #                         "type": "string",
-    #                         "description": "The category of the opportunity",
-    #                     },
-    #                     "FundingInstrumentType": {
-    #                         "type": "string",
-    #                         "description": "The funding instrument type of the opportunity",
-    #                     },
-    #                     "CategoryOfFundingActivity": {
-    #                         "type": "string",
-    #                         "description": "The category of funding activity of the opportunity",
-    #                     },
-    #                     "EligibleApplicants": {
-    #                         "type": "string",
-    #                         "description": "The eligible applicants for the opportunity",
-    #                     },
-    #                     "AdditionalInformationOnEligibility": {
-    #                         "type": "string",
-    #                         "description": "Additional information on the eligibility of the opportunity",
-    #                     },
-    #                     "AgencyName": {
-    #                         "type": "string",
-    #                         "description": "The name of the agency of the opportunity",
-    #                     },
-    #                     "Description": {
-    #                         "type": "string",
-    #                         "description": "The description of the opportunity",
-    #                     }
-    #                 },
-    #                 "required": ["OpportunityTitle", "OpportunityCategory", "FundingInstrumentType", "CategoryOfFundingActivity", "EligibleApplicants", "AdditionalInformationOnEligibility", "AgencyName", "Description"],
-    #                 }
-    #             },
-    #     }
-    # ]
 
     tools = [
     {
@@ -404,7 +287,7 @@ def chatWithLLM(my_prompt, function="auto"):
 
 
     response = openai.chat.completions.create(
-        model="gpt-3.5-turbo",  # Choose the GPT model,
+        model="gpt-4o",  # Choose the GPT model,
         messages=messages,
         tool_choice=({"type": "function", "function": {"name": function}}) if function != "auto" else function, 
         tools=tools,
@@ -463,57 +346,6 @@ def ideal_rfp_formatter(OpportunityTitle, OpportunityCategory, FundingInstrument
     return f"The OpportunityTitle is {OpportunityTitle}. The OpportunityCategory is {OpportunityCategory}. The FundingInstrumentType is {FundingInstrumentType}. The CategoryOfFundingActivity is {CategoryOfFundingActivity}. The EligibleApplicants is {EligibleApplicants}. The AdditionalInformationOnEligibility is {AdditionalInformationOnEligibility}. The AgencyName is {AgencyName}. The Description is {Description}."
 
 
-# def opportunity_output_formatter(opportunity1=None, opportunity2=None, opportunity3=None, opportunity4=None):
-#     """
-#     This function reformats the output of the LLM model
-
-#     Args:
-#         opportunity1 (dictionary): A list containing the details of the first opportunity in the format: {Opportunity Title : OpportuintyTitle, Opportunity ID : OpportunityID, Opportunity Number : OpportunityNumber, CFDA Number : CFDANumber, Description : Description}
-#         opportunity2 (dictionary): A list containing the details of the second opportunity in the format: {Opportunity Title : OpportuintyTitle, Opportunity ID : OpportunityID, Opportunity Number : OpportunityNumber, CFDA Number : CFDANumber, Description : Description}
-#         opportunity3 (dictionary): A list containing the details of the third opportunity in the format: {Opportunity Title : OpportuintyTitle, Opportunity ID : OpportunityID, Opportunity Number : OpportunityNumber, CFDA Number : CFDANumber, Description : Description}
-#         opportunity4 (dictionary): A list containing the details of the fourth opportunity in the format: {Opportunity Title : OpportuintyTitle, Opportunity ID : OpportunityID, Opportunity Number : OpportunityNumber, CFDA Number : CFDANumber, Description : Description}
-
-#     Returns:
-#         str: A string containing the reformatted output
-#     """
-
-#     output = ""
-#     if opportunity1:
-#         output += "-<1>-\n"
-#         output += f"Opportunity Title: {opportunity1['OpportunityTitle']}\n"
-#         output += f"Opportunity ID: {opportunity1['OpportunityID']}\n"
-#         output += f"Opportunity Number: {opportunity1['OpportunityNumber']}\n"
-#         output += f"CFDA Number: {opportunity1['CFDANumber']}\n"
-#         output += f"Description: {opportunity1['Description']}\n"
-#     else:
-#         return "I'm sorry, I couldn't find any relevant opportunities for you. Please try again with a different query."
-#     if opportunity2:
-#         output += "\n-<2>-\n"
-#         output += f"Opportunity Title: {opportunity2['OpportunityTitle']}\n"
-#         output += f"Opportunity ID: {opportunity2['OpportunityID']}\n"
-#         output += f"Opportunity Number: {opportunity2['OpportunityNumber']}\n"
-#         output += f"CFDA Number: {opportunity2['CFDANumber']}\n"
-#         output += f"Description: {opportunity2['Description']}\n"
-#     else:
-#         return output
-#     if opportunity3:
-#         output += "\n-<3>-\n"
-#         output += f"Opportunity Title: {opportunity3['OpportunityTitle']}\n"
-#         output += f"Opportunity ID: {opportunity3['OpportunityID']}\n"
-#         output += f"Opportunity Number: {opportunity3['OpportunityNumber']}\n"
-#         output += f"CFDA Number: {opportunity3['CFDANumber']}\n"
-#         output += f"Description: {opportunity3['Description']}\n"
-#     else:
-#         return output
-#     if opportunity4:
-#         output += "\n-<4>-\n"
-#         output += f"Opportunity Title: {opportunity4['OpportunityTitle']}\n"
-#         output += f"Opportunity ID: {opportunity4['OpportunityID']}\n"
-#         output += f"Opportunity Number: {opportunity4['OpportunityNumber']}\n"
-#         output += f"CFDA Number: {opportunity4['CFDANumber']}\n"
-#         output += f"Description: {opportunity4['Description']}\n"
-#     return output
-
 def opportunity_output_formatter(opportunities):
     """
     This function reformats the output of the LLM model
@@ -544,8 +376,22 @@ def opportunity_output_formatter(opportunities):
     return output
 
 
+
+
+
+def profile_func(func):
+    async def wrapper(*args, **kwargs):
+        profiler = Profiler()
+        profiler.start()
+        result = await func(*args, **kwargs)
+        profiler.stop()
+        print(profiler.output_text(unicode=True, color=True))  # Print profiling results to the console
+        return result
+    return wrapper
+
 @app.get("/", response_class=HTMLResponse)
 @app.post("/", response_class=HTMLResponse)
+@profile_func
 async def home(request: Request, query: str = Form(None)):
     response = None
     if query:
@@ -556,5 +402,23 @@ async def home(request: Request, query: str = Form(None)):
 
         llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
         response = chatWithLLM(llm_input, "opportunity_output_formatter")
-    
     return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
+
+
+
+
+
+
+# @app.get("/", response_class=HTMLResponse)
+# @app.post("/", response_class=HTMLResponse)
+# async def home(request: Request, query: str = Form(None)):
+#     response = None
+#     if query:
+#         ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
+
+#         vectorized_ideal_opportunity = model.encode(ideal_opportunity)
+#         fully_formatted_ideal_opportunity = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
+
+#         llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
+#         response = chatWithLLM(llm_input, "opportunity_output_formatter")
+#     return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})

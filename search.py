@@ -410,7 +410,6 @@ def opportunity_output_formatter(opportunity1=None, opportunity2=None, opportuni
 
 
 
-
 # First, we need to create a fake RFP that would be perfect for the user's question so that the similarity search can be performed
 ideal_opportunity = chatWithLLM("I want you to create one fake RFP that would be ideal for someone who has this question:" + my_input + ". Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
 
