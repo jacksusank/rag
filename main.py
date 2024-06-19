@@ -410,6 +410,17 @@ async def home(request: Request, query: str = Form(None)):
         logging.error(f"An error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
+# Sample usage of the `@profile_func` decorator
+def profile_func(func):
+    async def wrapper(*args, **kwargs):
+        profiler = Profiler()
+        profiler.start()
+        result = await func(*args, **kwargs)
+        profiler.stop()
+        logging.info("Profiling Results:")
+        logging.info(profiler.output_text(unicode=True, color=True))
+        return result
+    return wrapper
 
 
 
