@@ -28,11 +28,12 @@ load_dotenv()
 templates = Jinja2Templates(directory="templates")
 
 # Initialize models and connections
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2") 
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
 
@@ -128,11 +129,17 @@ def ranker(vector):
 
     # Perform cosine similarity search
     # Returns the page contents of the 25 most similar opportunities
+    # insert_query = """
+    # SELECT page_contents, (embeddings <=> (%s::vector)) AS cosine_distance
+    # FROM totemembeddings
+    # ORDER BY cosine_distance
+    # LIMIT 25;
+    # """
     insert_query = """
-    SELECT page_contents, (embeddings <=> (%s::vector)) AS cosine_distance
+    SELECT page_contents, (%s::float[] DOT embeddings) AS dot_product
     FROM totemembeddings
-    ORDER BY cosine_distance
-    LIMIT 25;
+    ORDER BY dot_product DESC
+    LIMIT 4;
     """
 
     cursor.execute(insert_query, (vector,))
@@ -339,6 +346,8 @@ def chatWithLLM(my_prompt, function="auto"):
             function_response = function_to_call(
                 opportunities=function_args.get("opportunities")
             )
+
+            print(function_response)
     return function_response
 
 
@@ -407,7 +416,7 @@ async def home(request: Request, query: str = Form(None)):
         if query:
             ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
 
-            vectorized_ideal_opportunity = model.encode(ideal_opportunity, normalize_embeddings=True)
+            vectorized_ideal_opportunity = model.encode(ideal_opportunity)
             fully_formatted_ideal_opportunity = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
 
             llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
