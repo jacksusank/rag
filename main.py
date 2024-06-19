@@ -136,9 +136,9 @@ def ranker(vector):
     # LIMIT 25;
     # """
     insert_query = """
-    SELECT page_contents, (%s::float[] DOT embeddings) AS dot_product
+    SELECT page_contents, dot_product(%s, embeddings) AS similarity_score
     FROM totemembeddings
-    ORDER BY dot_product DESC
+    ORDER BY similarity_score DESC
     LIMIT 4;
     """
 
