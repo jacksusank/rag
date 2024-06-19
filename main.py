@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form, HTTPException
+from fastapi import FastAPI, Request, Form
 # from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
@@ -28,13 +28,8 @@ load_dotenv()
 templates = Jinja2Templates(directory="templates")
 
 # Initialize models and connections
-model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2") 
-
+model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# Configure logging
-# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
 
 
 # Functions to interact with PostgreSQL
@@ -64,20 +59,10 @@ def findSimilarVectors(user_tuple):
 
     # Perform cosine similarity search
     # Returns the page contents of the 4 most similar opportunities
-    # insert_query = """
-    # SELECT page_contents, (embeddings <=> (%s::vector)) AS cosine_distance
-    # FROM totemembeddings
-    # ORDER BY cosine_distance
-    # LIMIT 4;
-    # """
-
-    
-    # Perform the dot_product similarity search
-
     insert_query = """
-    SELECT page_contents, (%s::float[] DOT embeddings) AS dot_product
+    SELECT page_contents, (embeddings <=> (%s::vector)) AS cosine_distance
     FROM totemembeddings
-    ORDER BY dot_product DESC
+    ORDER BY cosine_distance
     LIMIT 4;
     """
 
@@ -129,17 +114,11 @@ def ranker(vector):
 
     # Perform cosine similarity search
     # Returns the page contents of the 25 most similar opportunities
-    # insert_query = """
-    # SELECT page_contents, (embeddings <=> (%s::vector)) AS cosine_distance
-    # FROM totemembeddings
-    # ORDER BY cosine_distance
-    # LIMIT 25;
-    # """
     insert_query = """
-    SELECT page_contents, dot_product(%s, embeddings) AS similarity_score
+    SELECT page_contents, (embeddings <=> (%s::vector)) AS cosine_distance
     FROM totemembeddings
-    ORDER BY similarity_score DESC
-    LIMIT 4;
+    ORDER BY cosine_distance
+    LIMIT 25;
     """
 
     cursor.execute(insert_query, (vector,))
@@ -346,8 +325,6 @@ def chatWithLLM(my_prompt, function="auto"):
             function_response = function_to_call(
                 opportunities=function_args.get("opportunities")
             )
-
-            print(function_response)
     return function_response
 
 
@@ -404,51 +381,43 @@ def opportunity_output_formatter(opportunities):
 
 
 
+def profile_func(func):
+    async def wrapper(*args, **kwargs):
+        profiler = Profiler()
+        profiler.start()
+        result = await func(*args, **kwargs)
+        profiler.stop()
+        print(profiler.output_text(unicode=True, color=True))  # Print profiling results to the console
+        return result
+    return wrapper
+
 @app.get("/", response_class=HTMLResponse)
 @app.post("/", response_class=HTMLResponse)
+@profile_func
 async def home(request: Request, query: str = Form(None)):
     response = None
 
-    # profiler = Profiler()
-    # profiler.start()
+    profiler = Profiler()
+    profiler.start()
 
-    try:
-        if query:
-            ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
+    if query:
+        ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
 
-            vectorized_ideal_opportunity = model.encode(ideal_opportunity)
-            fully_formatted_ideal_opportunity = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
+        vectorized_ideal_opportunity = model.encode(ideal_opportunity)
+        fully_formatted_ideal_opportunity = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
 
-            llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
-            response = chatWithLLM(llm_input, "opportunity_output_formatter")
+        llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
+        response = chatWithLLM(llm_input, "opportunity_output_formatter")
 
-        # profiler.stop()
-
-        # logging.info("Profiling Results:")
-        # logging.info(profiler.output_text(unicode=True, color=True))
-
-        return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
-    
-    except Exception as e:
-        logging.error(f"An error occurred: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+    profiler.stop()
 
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
+    # Log profiling results
+    logging.info("Profiling Results:")
+    logging.info(profiler.output_text(unicode=True, color=True))  # Print profiling results to logs
 
-# Sample usage of the `@profile_func` decorator
-# def profile_func(func):
-#     async def wrapper(*args, **kwargs):
-#         profiler = Profiler()
-#         profiler.start()
-#         result = await func(*args, **kwargs)
-#         profiler.stop()
-#         logging.info("Profiling Results:")
-#         logging.info(profiler.output_text(unicode=True, color=True))
-#         return result
-#     return wrapper
+    return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
+
 
 
 

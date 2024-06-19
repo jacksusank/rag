@@ -68,7 +68,7 @@
             box-sizing: border-box;
         }
         textarea {
-            height: 200px; 
+            height: 200px; /* Increase height for paragraph input */
         }
         textarea::placeholder {
             color: grey;
@@ -207,7 +207,6 @@
 
             loader.style.display = 'block'; // Show loader
             resultContainer.style.display = 'none'; // Hide results
-            
 
             const formData = new FormData(form);
             fetch(form.action, {
@@ -216,17 +215,16 @@
             })
             .then(response => response.text())
             .then(data => {
-                resultContainer.innerHTML = ''; // Clear existing content
                 resultContainer.innerHTML = data;
                 loader.style.display = 'none'; // Hide loader
                 resultContainer.style.display = 'block'; // Show results
             })
             .catch(error => {
                 console.error('Error:', error);
-                loader.style.display = 'none'; //
+                loader.style.display = 'none'; // Hide loader in case of error
+                resultContainer.style.display = 'block'; // Show results (you might want to show an error message here)
             });
         });
     </script>
 </body>
 </html>
-
