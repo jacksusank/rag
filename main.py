@@ -112,12 +112,12 @@ def ranker(vector):
     # Create a cursor
     cursor = connection.cursor()
 
-    # Perform cosine similarity search
+    # Perform inner product similarity search
     # Returns the page contents of the 25 most similar opportunities
     insert_query = """
-    SELECT page_contents, (embeddings <=> (%s::vector)) AS cosine_distance
+    SELECT page_contents, (embeddings <#> (%s::vector)) * -1 AS inner_product_distance
     FROM totemembeddings
-    ORDER BY cosine_distance
+    ORDER BY inner_product_distance
     LIMIT 25;
     """
 
@@ -143,7 +143,7 @@ def reranker(query, relevant_opportunities):
     Returns:
         list: A list of the 4 most similar opportunities re-ranked based on the user's query
     """
-    ce = CrossEncoder('BAAI/bge-reranker-large')
+    ce = CrossEncoder('BAAI/bge-reranker-base')
 
     # Create pairs of the user's query and the page content of the opportunities
     pairs = [(query, opp[0]) for opp in relevant_opportunities]
@@ -390,7 +390,7 @@ async def home(request: Request, query: str = Form(None)):
     if query:
         ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
 
-        vectorized_ideal_opportunity = model.encode(ideal_opportunity)
+        vectorized_ideal_opportunity = model.encode(ideal_opportunity, normalize_embeddings=True)
         fully_formatted_ideal_opportunity = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
 
         llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))

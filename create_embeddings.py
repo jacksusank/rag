@@ -13,7 +13,7 @@ page_contents_list = [doc["page_content"] for doc in documents]
 metadata = [doc["metadata"] for doc in documents]
 
 model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
-embeddings = model.encode(page_contents_list, show_progress_bar=True)
+embeddings = model.encode(page_contents_list, show_progress_bar=True, normalize_embeddings=True)
 
 # Generic version
 # connection = psycopg2.connect(
