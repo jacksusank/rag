@@ -400,8 +400,8 @@ def opportunity_output_formatter(opportunities):
 async def home(request: Request, query: str = Form(None)):
     response = None
 
-    profiler = Profiler()
-    profiler.start()
+    # profiler = Profiler()
+    # profiler.start()
 
     try:
         if query:
@@ -413,10 +413,10 @@ async def home(request: Request, query: str = Form(None)):
             llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
             response = chatWithLLM(llm_input, "opportunity_output_formatter")
 
-        profiler.stop()
+        # profiler.stop()
 
-        logging.info("Profiling Results:")
-        logging.info(profiler.output_text(unicode=True, color=True))
+        # logging.info("Profiling Results:")
+        # logging.info(profiler.output_text(unicode=True, color=True))
 
         return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
     
@@ -424,17 +424,22 @@ async def home(request: Request, query: str = Form(None)):
         logging.error(f"An error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
 # Sample usage of the `@profile_func` decorator
-def profile_func(func):
-    async def wrapper(*args, **kwargs):
-        profiler = Profiler()
-        profiler.start()
-        result = await func(*args, **kwargs)
-        profiler.stop()
-        logging.info("Profiling Results:")
-        logging.info(profiler.output_text(unicode=True, color=True))
-        return result
-    return wrapper
+# def profile_func(func):
+#     async def wrapper(*args, **kwargs):
+#         profiler = Profiler()
+#         profiler.start()
+#         result = await func(*args, **kwargs)
+#         profiler.stop()
+#         logging.info("Profiling Results:")
+#         logging.info(profiler.output_text(unicode=True, color=True))
+#         return result
+#     return wrapper
 
 
 
