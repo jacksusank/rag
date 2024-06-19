@@ -184,8 +184,8 @@
                         <p><strong>Opportunity Number:</strong> {{ opportunity.split('\n')[3].split(':')[1].strip() }}</p>
                         <p><strong>CFDA Number:</strong> {{ opportunity.split('\n')[4].split(':')[1].strip() }}</p>
                         <p><strong>Description:</strong> {{ opportunity.split('\n')[5].split(':')[1].strip() }}</p>
-                        <p><strong>Grants.gov URL:</strong> {{ opportunity.split('\n')[6].split(':')[1].strip() }}</p>
-                        <p><strong>Additional Information:</strong> {{ opportunity.split('\n')[7].split(':')[1].strip() }}</p>
+                        <p><strong>Grants.gov URL:</strong> {{ "https:" + opportunity.split('\n')[6].split(':')[2].strip() }}</p>
+                        <p><strong>Additional Information:</strong> {{ "https:" + opportunity.split('\n')[7].split(':')[2].strip() }}</p>
                     </div>
                     {% endif %}
                     {% endfor %}
@@ -218,6 +218,7 @@
                 resultContainer.innerHTML = data;
                 loader.style.display = 'none'; // Hide loader
                 resultContainer.style.display = 'block'; // Show results
+                queryContainer.style.display = 'none'; // Hide query form
             })
             .catch(error => {
                 console.error('Error:', error);

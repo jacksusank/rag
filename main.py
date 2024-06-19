@@ -386,42 +386,18 @@ def opportunity_output_formatter(opportunities):
 async def home(request: Request, query: str = Form(None)):
     response = None
 
-    profiler = Profiler()
-    profiler.start()
 
-    try:
-        if query:
-            ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
+    if query:
+        ideal_opportunity = chatWithLLM(f"I want you to create one fake RFP that would be ideal for someone who has this question: {query}. Make sure to include the corresponding fake OpportunityTitle, OpportunityCategory, FundingInstrumentType, CategoryOfFundingActivity, EligibleApplicants, AdditionalInformationOnEligibility, AgencyName, and Description.", "ideal_rfp_formatter")
 
-            vectorized_ideal_opportunity = model.encode(ideal_opportunity)
-            fully_formatted_ideal_opportunity = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
+        vectorized_ideal_opportunity = model.encode(ideal_opportunity)
+        fully_formatted_ideal_opportunity = [embedding.tolist() for embedding in vectorized_ideal_opportunity]
 
-            llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
-            response = chatWithLLM(llm_input, "opportunity_output_formatter")
+        llm_input = promptMaker(reranker(query, ranker(fully_formatted_ideal_opportunity)))
+        response = chatWithLLM(llm_input, "opportunity_output_formatter")
 
-        profiler.stop()
 
-        logging.info("Profiling Results:")
-        logging.info(profiler.output_text(unicode=True, color=True))
-
-        return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
-    
-    except Exception as e:
-        logging.error(f"An error occurred: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-
-# Sample usage of the `@profile_func` decorator
-def profile_func(func):
-    async def wrapper(*args, **kwargs):
-        profiler = Profiler()
-        profiler.start()
-        result = await func(*args, **kwargs)
-        profiler.stop()
-        logging.info("Profiling Results:")
-        logging.info(profiler.output_text(unicode=True, color=True))
-        return result
-    return wrapper
-
+    return templates.TemplateResponse("home.html", {"request": request, "query": query, "response": response})
 
 
 
