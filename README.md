@@ -11,7 +11,10 @@ In another terminal:
 Create embeddings:
 `make embeddings`
 
-Query database:
+To interact via localhost site:
+uvicorn fast_api_search:app --reload
+
+To manually query the database:
 `QUERY="query" make search`
 
 cd /tmp

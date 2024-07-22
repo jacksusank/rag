@@ -13,13 +13,15 @@ page_contents_list = [doc["page_content"] for doc in documents]
 metadata = [doc["metadata"] for doc in documents]
 
 model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
-embeddings = model.encode(page_contents_list, show_progress_bar=True, normalize_embeddings=True)
+# embeddings = model.encode(page_contents_list, show_progress_bar=True, normalize_embeddings=True)
+embeddings = model.encode(page_contents_list, show_progress_bar=True)
+
 
 # Generic version
-# connection = psycopg2.connect(
-#     host="localhost", port="5432", database="totem", user="postgres", password="test"
-# )
-connection = connect()
+connection = psycopg2.connect(
+    host="localhost", port="5432", database="totem", user="postgres", password="test"
+)
+# connection = connect()
 
 # Create a cursor
 cursor = connection.cursor()
@@ -33,7 +35,7 @@ for embedding, page_contents, meta in zip(formatted_embeddings, page_contents_li
     items.append([embedding, page_contents, json.dumps(meta)])
 
     
-    # # Construct the INSERT query
+    # Construct the INSERT query
     # insert_query = """
     # INSERT INTO totemembeddings (embeddings, page_contents, metadata)
     # VALUES (%s, %s, %s)
